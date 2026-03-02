@@ -1,0 +1,6 @@
+# ไมอัปโหลดไฟลตั้งคาของจริงขึ้นระบบ
+js/config.js
+
+# ไฟลระบบของ Mac/Windows
+.DS_Store
+Thumbs.db
