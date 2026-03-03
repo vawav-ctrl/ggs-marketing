@@ -378,28 +378,30 @@ async function handleLogin() {
 // ============== LOGIC: Home & Cart ==============
 async function loadHomeData() {
     try {
-        showLoading();
-        const data = await API.getAssets();
-        State.assets = data.assets;
-        State.categories = data.categories;
-
-        // Render Categories
-        renderCategories();
-
-        // Setup initial view
+        // Show Skeleton loaders for Categories
+        Elements.categoryGrid.innerHTML = `
+            <div class="card skeleton" style="height: 140px;"></div>
+            <div class="card skeleton" style="height: 140px;"></div>
+            <div class="card skeleton" style="height: 140px;"></div>
+            <div class="card skeleton" style="height: 140px;"></div>
+        `;
         Elements.categoryGrid.classList.remove('hidden');
         Elements.assetListContainer.classList.add('hidden');
         Elements.catTitle.textContent = 'Categories';
         Elements.btnBackCat.classList.add('hidden');
+        showScreen('home');
+
+        const data = await API.getAssets();
+        State.assets = data.assets;
+        State.categories = data.categories;
+
+        renderCategories();
+
         State.currentCategory = null; // Ensure no category is selected initially
         Elements.inputSearchAssets.value = ''; // Clear search field
-
-        showScreen('home');
         updateCartBadge();
     } catch (error) {
         alert("Error loading data: " + error.message);
-    } finally {
-        hideLoading();
     }
 }
 
@@ -427,7 +429,17 @@ function showAssetsInCategory(category) {
 
     State.currentCategory = category; // Save state for filtering
     Elements.inputSearchAssets.value = ''; // Reset search field on enter
-    renderAssetsInsideCategory(category, '');
+
+    // Show skeletons briefly
+    Elements.assetList.innerHTML = `
+        <div class="list-item skeleton" style="height: 80px; margin-bottom: 0.5rem; background: rgba(255,255,255,0.05); border: none;"></div>
+        <div class="list-item skeleton" style="height: 80px; margin-bottom: 0.5rem; background: rgba(255,255,255,0.05); border: none;"></div>
+        <div class="list-item skeleton" style="height: 80px; margin-bottom: 0.5rem; background: rgba(255,255,255,0.05); border: none;"></div>
+    `;
+
+    setTimeout(() => {
+        renderAssetsInsideCategory(category, '');
+    }, 150); // Small delay to show smooth skeleton fade-in
 }
 
 function renderAssetsInsideCategory(category, searchQuery = '') {
@@ -467,7 +479,7 @@ function renderAssetsInsideCategory(category, searchQuery = '') {
                 <div class="list-item-content">
                     <div class="list-item-title">${asset.Name}</div>
                     <div class="list-item-desc">Available: <span class="${available > 0 ? 'text-success' : 'text-danger'}">${available}</span></div>
-                    ${asset.Notes ? `<div style="font-size:0.75rem; color:#888;">${asset.Notes}</div>` : ''}
+                    ${asset.Notes ? `<div style="font-size:0.75rem; color:var(--text-secondary);">${asset.Notes}</div>` : ''}
                 </div>
             </div>
             <div>
@@ -514,15 +526,15 @@ function openAssetModal(sku) {
             const div = document.createElement('div');
             div.className = 'carousel-item';
             div.innerHTML = `
-                <div style="background:#fff; border-radius:0.5rem; padding:1rem; border:1px solid #ddd; display:flex; justify-content:space-between; box-shadow:var(--shadow-sm);">
+                <div style="background:var(--card-background); border-radius:1rem; padding:1.25rem; border:1px solid var(--card-border); display:flex; justify-content:space-between; box-shadow:var(--shadow-sm); margin:0 2px;">
                     <div style="flex: 1;">
-                      <div style="font-weight:bold;">${b.name || b.email}</div>
-                      <div style="color:var(--text-secondary); font-size:0.8rem;">Purpose: ${b.purpose || '-'}</div>
-                      <div style="color:var(--text-secondary); font-size:0.8rem; margin-top:0.25rem;">Status: <span class="badge ${badgeClass}" style="padding:0.15rem 0.5rem; font-size:0.75rem;">${b.status}</span></div>
+                      <div style="font-weight:bold; color:var(--text-primary);">${b.name || b.email}</div>
+                      <div style="color:var(--text-secondary); font-size:0.8rem; margin-top:0.25rem;">Purpose: ${b.purpose || '-'}</div>
+                      <div style="color:var(--text-secondary); font-size:0.8rem; margin-top:0.5rem;">Status: <span class="badge ${badgeClass}" style="padding:0.2rem 0.6rem; font-size:0.7rem;">${b.status}</span></div>
                     </div>
                     <div style="text-align:right;">
-                      <div style="font-weight:bold;">x${b.qty}</div>
-                      <div style="color:var(--text-secondary); font-size:0.8rem;">Due: ${dateStr}</div>
+                      <div style="font-weight:bold; font-size:1.1rem; color:var(--primary-color);">x${b.qty}</div>
+                      <div style="color:var(--text-secondary); font-size:0.8rem; margin-top:0.25rem;">Due: ${dateStr}</div>
                     </div>
                 </div>
              `;
@@ -644,7 +656,7 @@ function renderCart() {
     const totalQty = State.cart.reduce((sum, item) => sum + item.qty, 0);
     const summaryDiv = document.createElement('div');
     summaryDiv.className = 'flex justify-between mt-4 p-3 font-bold';
-    summaryDiv.style.cssText = "background-color: var(--background-color); border-radius: 0.5rem; border: 1px dashed var(--primary-color);";
+    summaryDiv.style.cssText = "background-color: rgba(255,255,255,0.05); border-radius: 0.5rem; border: 1px dashed var(--primary-color);";
     summaryDiv.innerHTML = `
         <div>Total Quantity:</div>
         <div class="text-primary">${totalQty} items</div>
@@ -678,7 +690,7 @@ function prepareCheckout() {
     State.cart.forEach((item) => {
         const div = document.createElement('div');
         div.className = 'flex justify-between mt-2 pb-2';
-        div.style.borderBottom = "1px dashed #eee";
+        div.style.borderBottom = "1px solid var(--card-border)";
         div.innerHTML = `
             <div>${item.asset.Name}</div>
             <div style="font-weight:bold;">x${item.qty}</div>
@@ -689,7 +701,7 @@ function prepareCheckout() {
     const totalQty = State.cart.reduce((sum, item) => sum + item.qty, 0);
     const summaryDiv = document.createElement('div');
     summaryDiv.className = 'flex justify-between mt-4 p-3 font-bold';
-    summaryDiv.style.cssText = "background-color: var(--background-color); border-radius: 0.5rem; text-align:right; border: 1px solid var(--border-color);";
+    summaryDiv.style.cssText = "background-color: rgba(255,255,255,0.05); border-radius: 0.5rem; text-align:right; border: 1px solid var(--card-border);";
     summaryDiv.innerHTML = `
         <div>Total:</div>
         <div class="text-primary">${totalQty} items</div>
@@ -731,18 +743,20 @@ async function submitCheckout() {
     }
 }
 
-// ============== LOGIC: My Items ==============
 async function loadMyItems() {
     try {
-        showLoading();
         showScreen('myItems');
+
+        Elements.myItemsListActive.innerHTML = `
+            <div class="card skeleton" style="height: 120px; margin-bottom: 1rem;"></div>
+            <div class="card skeleton" style="height: 120px; margin-bottom: 1rem;"></div>
+        `;
+
         const data = await API.getMyItems(State.user.email);
         State.myItems = data.transactions;
         renderMyItems();
     } catch (error) {
         alert("Error loading My Items: " + error.message);
-    } finally {
-        hideLoading();
     }
 }
 
@@ -857,7 +871,7 @@ function openTransModal(transId) {
             const img = asset ? asset.ImageURL : 'https://placehold.co/100';
 
             const div = document.createElement('div');
-            div.style.cssText = "display:flex; align-items:center; gap:10px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #eee;";
+            div.style.cssText = "display:flex; align-items:center; gap:10px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--card-border); color:var(--text-primary);";
             div.innerHTML = `
             <img src="${img}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" onerror="this.src='https://placehold.co/100'">
             <div style="flex:1;">
@@ -871,7 +885,7 @@ function openTransModal(transId) {
         const totalQty = t.Items.reduce((sum, i) => sum + i.qty, 0);
         const summaryDiv = document.createElement('div');
         summaryDiv.className = 'flex justify-between mt-2 pt-2';
-        summaryDiv.style.cssText = "font-weight:bold; font-size:1rem; border-top:2px solid #ddd; color:var(--primary-color);";
+        summaryDiv.style.cssText = "font-weight:bold; font-size:1rem; border-top:1px solid var(--card-border); color:var(--primary-color);";
         summaryDiv.innerHTML = `
         <div>Total Quantity:</div>
         <div>${totalQty}</div>
@@ -924,7 +938,17 @@ async function returnItem(transId) {
 async function loadAdminDash() {
     showScreen('admin');
     try {
-        showLoading();
+        // Render Skeletons for top stats
+        Elements.dashTotal.innerHTML = `<span class="skeleton" style="display:inline-block; width:50px; height:30px;"></span>`;
+        Elements.dashBorrowed.innerHTML = `<span class="skeleton" style="display:inline-block; width:50px; height:30px;"></span>`;
+        Elements.dashOverdue.innerHTML = `<span class="skeleton" style="display:inline-block; width:50px; height:30px;"></span>`;
+        Elements.dashInactive.innerHTML = `<span class="skeleton" style="display:inline-block; width:50px; height:30px;"></span>`;
+
+        Elements.dashAssetsContainer.innerHTML = `
+             <div class="cat-card skeleton" style="height: 120px;"></div>
+             <div class="cat-card skeleton" style="height: 120px;"></div>
+        `;
+
         const data = await API.getDashboard(State.user.email);
         State.dashData = data;
 
@@ -979,10 +1003,10 @@ async function loadAdminDash() {
                 div.innerHTML = `
                     <div class="flex justify-between align-center">
                         <div class="flex align-center gap-3">
-                            <div style="width:40px; height:40px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">👤</div>
+                            <div style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:1.2rem;">👤</div>
                             <div>
-                                <div style="font-weight:bold;">${u.Name}</div>
-                                <div style="font-size:0.8rem; color:#888;">${email}</div>
+                                <div style="font-weight:bold; color:var(--text-primary);">${u.Name}</div>
+                                <div style="font-size:0.8rem; color:var(--text-secondary);">${email}</div>
                             </div>
                         </div>
                         <div style="text-align:right;">
@@ -1074,8 +1098,6 @@ async function loadAdminDash() {
         loadApprovals();
     } catch (error) {
         alert("Error loading dashboard: " + error.message);
-    } finally {
-        hideLoading();
     }
 }
 

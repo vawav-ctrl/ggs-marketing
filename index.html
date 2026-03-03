@@ -24,10 +24,11 @@
         <div id="screen-login" class="screen flex flex-col align-center hidden"
             style="justify-content:center; min-height:100vh;">
             <div style="text-align:center; margin-bottom: 2rem;">
-                <!-- Placeholder Logo -->
+                <!-- Sleek Logo -->
                 <div
-                    style="width:100px; height:100px; background:#2563eb; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto; font-size:2rem; font-weight:bold;">
-                    G</div>
+                    style="width:80px; height:80px; background:var(--card-background); border:1px solid var(--border-color); color:var(--text-primary); border-radius:24px; display:flex; align-items:center; justify-content:center; margin: 0 auto; font-size:2rem; font-weight:bold; box-shadow:var(--shadow-md);">
+                    <span style="font-style: italic;">G</span>
+                </div>
                 <h1 class="mt-4">Marketing Asset</h1>
             </div>
 
@@ -107,11 +108,12 @@
             <div class="topbar">
                 <h1 class="topbar-title">My Items</h1>
             </div>
-            <div class="flex" style="border-bottom:1px solid var(--border-color); background:var(--card-background);">
+            <div class="flex"
+                style="border-bottom:1px solid var(--card-border); background:rgba(12,13,16,0.5); backdrop-filter:blur(8px);">
                 <button class="myitems-tab-btn" data-tab="active"
-                    style="flex:1; padding:1rem; border:none; background:none; border-bottom:2px solid var(--primary-color); font-weight:bold; cursor:pointer;">Active</button>
+                    style="flex:1; padding:1.25rem; border:none; background:none; border-bottom:2px solid var(--primary-color); font-weight:bold; cursor:pointer; color:var(--text-primary); transition:all 0.2s;">Active</button>
                 <button class="myitems-tab-btn" data-tab="history"
-                    style="flex:1; padding:1rem; border:none; background:none; border-bottom:2px solid transparent; cursor:pointer;">History</button>
+                    style="flex:1; padding:1.25rem; border:none; background:none; border-bottom:2px solid transparent; cursor:pointer; color:var(--text-secondary); transition:all 0.2s;">History</button>
             </div>
 
             <div style="padding: 1rem;">
@@ -132,13 +134,14 @@
                 <h1 class="topbar-title">Admin Center</h1>
             </div>
 
-            <div class="flex" style="border-bottom:1px solid var(--border-color); background:var(--card-background);">
+            <div class="flex"
+                style="border-bottom:1px solid var(--card-border); background:rgba(12,13,16,0.5); backdrop-filter:blur(8px);">
                 <button class="tab-btn" data-tab="dashboard"
-                    style="flex:1; padding:1rem; border:none; background:none; border-bottom:2px solid var(--primary-color); font-weight:bold; cursor:pointer;">Dashboard</button>
+                    style="flex:1; padding:1.25rem; border:none; background:none; border-bottom:2px solid var(--primary-color); font-weight:bold; cursor:pointer; color:var(--text-primary); transition:all 0.2s;">Dashboard</button>
                 <button class="tab-btn" data-tab="approvals"
-                    style="flex:1; padding:1rem; border:none; background:none; border-bottom:2px solid transparent; cursor:pointer; position:relative;">
+                    style="flex:1; padding:1.25rem; border:none; background:none; border-bottom:2px solid transparent; cursor:pointer; position:relative; color:var(--text-secondary); transition:all 0.2s;">
                     Approvals
-                    <span id="admin-badge-tab" class="cart-badge hidden" style="top:5px; right:20%;">0</span>
+                    <span id="admin-badge-tab" class="cart-badge hidden" style="top:5px; right:15%;">0</span>
                 </button>
             </div>
 
@@ -224,9 +227,9 @@
 
     <!-- Cart Modal (Overlay) -->
     <div id="cart-modal"
-        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100;">
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:100;">
         <div
-            style="position:absolute; bottom:0; left:0; right:0; background:white; border-top-left-radius:1rem; border-top-right-radius:1rem; padding:1rem; max-height:80vh; display:flex; flex-direction:column; max-width:600px; margin:0 auto;">
+            style="position:absolute; bottom:0; left:0; right:0; background:var(--background-color); border-top:1px solid var(--card-border); border-top-left-radius:1.5rem; border-top-right-radius:1.5rem; padding:1.5rem; max-height:85vh; display:flex; flex-direction:column; max-width:600px; margin:0 auto;">
             <div class="flex justify-between align-center mb-4 pb-2" style="border-bottom:1px solid #eee;">
                 <h3>Your Cart</h3>
                 <button id="btn-close-cart"
@@ -243,9 +246,9 @@
 
     <!-- Asset Detail Modal (Overlay) -->
     <div id="asset-modal" class="hidden"
-        style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100;">
+        style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:100;">
         <div
-            style="position:absolute; bottom:0; left:0; right:0; background:white; border-top-left-radius:1rem; border-top-right-radius:1rem; padding:1.5rem; max-height:90vh; display:flex; flex-direction:column; max-width:600px; margin:0 auto; overflow-y:auto;">
+            style="position:absolute; bottom:0; left:0; right:0; background:var(--background-color); border-top:1px solid var(--card-border); border-top-left-radius:1.5rem; border-top-right-radius:1.5rem; padding:1.5rem; max-height:90vh; display:flex; flex-direction:column; max-width:600px; margin:0 auto; overflow-y:auto;">
             <div class="flex justify-between align-center mb-3">
                 <h3 id="modal-asset-cat" class="text-secondary" style="font-size:0.9rem;">Category</h3>
                 <button id="btn-close-asset-modal"
@@ -293,23 +296,24 @@
 
     <!-- Transaction Detail Modal (Overlay) -->
     <div id="trans-modal" class="hidden"
-        style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100;">
+        style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:100;">
         <div
-            style="position:absolute; bottom:0; left:0; right:0; background:white; border-top-left-radius:1rem; border-top-right-radius:1rem; padding:1.5rem; max-height:90vh; display:flex; flex-direction:column; max-width:600px; margin:0 auto; overflow-y:auto;">
+            style="position:absolute; bottom:0; left:0; right:0; background:var(--background-color); border-top:1px solid var(--card-border); border-top-left-radius:1.5rem; border-top-right-radius:1.5rem; padding:1.5rem; max-height:90vh; display:flex; flex-direction:column; max-width:600px; margin:0 auto; overflow-y:auto;">
             <div class="flex justify-between align-center mb-3">
                 <h3 class="text-secondary" style="font-size:0.9rem;">Transaction Details</h3>
                 <button id="btn-close-trans-modal"
                     style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
 
-            <div class="card mb-4" style="padding:1rem; background:#f9fafb; border:none;">
+            <div class="card mb-4"
+                style="padding:1.5rem; background:var(--card-background); border:1px solid var(--card-border);">
                 <h2 id="modal-trans-id" class="mb-2" style="font-size:1.2rem;">TR-000</h2>
                 <div class="mb-1"><strong>Status:</strong> <span id="modal-trans-status"></span></div>
                 <div class="mb-1"><strong>Date:</strong> <span id="modal-trans-date"></span></div>
                 <div class="mb-1"><strong>Expected Return:</strong> <span id="modal-trans-return"></span></div>
                 <div class="mt-2" style="font-size:0.85rem;">
                     <span
-                        style="display:inline-block; padding:0.3rem 0.6rem; background-color:#f8f9fa; border:1px solid #e9ecef; border-radius:4px; font-weight:500; color:#495057;">
+                        style="display:inline-block; padding:0.4rem 0.8rem; background-color:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:50px; font-weight:500; color:var(--text-secondary);">
                         Purpose: <span id="modal-trans-purpose"></span>
                     </span>
                 </div>
@@ -336,9 +340,9 @@
 
     <!-- Admin Dashboard Detail Modal (Overlay) -->
     <div id="admin-dash-modal" class="hidden"
-        style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100;">
+        style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:100;">
         <div
-            style="position:absolute; bottom:0; left:0; right:0; background:white; border-top-left-radius:1rem; border-top-right-radius:1rem; padding:1.5rem; max-height:90vh; display:flex; flex-direction:column; max-width:600px; margin:0 auto; overflow-y:auto;">
+            style="position:absolute; bottom:0; left:0; right:0; background:var(--background-color); border-top:1px solid var(--card-border); border-top-left-radius:1.5rem; border-top-right-radius:1.5rem; padding:1.5rem; max-height:90vh; display:flex; flex-direction:column; max-width:600px; margin:0 auto; overflow-y:auto;">
             <div class="flex justify-between align-center mb-3">
                 <h3 id="admin-dash-modal-title" class="text-secondary"
                     style="font-size:1.1rem; color:var(--text-color);">Details</h3>
@@ -347,7 +351,7 @@
             </div>
 
             <div class="search-bar mb-4"
-                style="background: white; padding-bottom: 0.5rem; display: flex; flex-direction: column;">
+                style="background: transparent; padding-bottom: 0.5rem; display: flex; flex-direction: column;">
                 <input type="text" id="input-search-dash" class="input" placeholder="Search Filter..."
                     style="margin-bottom:0.5rem;">
                 <div id="admin-dash-modal-summary" style="font-size: 0.85rem; color: var(--text-secondary);"></div>
@@ -361,7 +365,7 @@
 
     <!-- Bottom Navigation Bar -->
     <div
-        style="position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid var(--border-color); display:flex; z-index:50;">
+        style="position:fixed; bottom:0; left:0; right:0; background:rgba(12,13,16,0.8); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-top:1px solid var(--card-border); display:flex; z-index:50;">
         <div
             style="max-width:600px; margin:0 auto; width:100%; display:flex; justify-content:space-around; align-items:center; padding:0.75rem 0;">
             <div class="nav-item flex flex-col align-center" data-target="home"
