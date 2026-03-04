@@ -61,6 +61,7 @@ const Elements = {
     adminTabs: document.querySelectorAll('.tab-btn'),
     adminDashboard: document.getElementById('admin-tab-dashboard'),
     adminApprovals: document.getElementById('admin-tab-approvals'),
+    adminReturnApprovals: document.getElementById('admin-tab-return-approvals'),
     dashTotal: document.getElementById('dash-total'),
     dashAssetsContainer: document.getElementById('dash-assets-container'),
     dashBorrowed: document.getElementById('dash-borrowed'),
@@ -70,8 +71,10 @@ const Elements = {
     dashInactive: document.getElementById('dash-inactive'),
     dashDormantContainer: document.getElementById('dash-dormant-container'),
     approvalList: document.getElementById('approval-list'),
+    returnApprovalList: document.getElementById('return-approval-list'),
     adminBadgeNav: document.getElementById('admin-badge-nav'),
     adminBadgeTab: document.getElementById('admin-badge-tab'),
+    adminBadgeReturnTab: document.getElementById('admin-badge-return-tab'),
     // Navigation Bottom
     navItems: document.querySelectorAll('.nav-item'),
 
@@ -207,17 +210,25 @@ function attachEvents() {
     // Admin Tabs
     Elements.adminTabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
+            // get correct target because of inner HTML
+            const btn = e.target.closest('.tab-btn');
+            if (!btn) return;
+
             // style tabs
             Elements.adminTabs.forEach(t => t.style.borderColor = 'transparent');
-            const target = e.target;
-            target.style.borderColor = 'var(--primary-color)';
+            btn.style.borderColor = 'var(--primary-color)';
 
-            if (target.dataset.tab === 'dashboard') {
+            Elements.adminDashboard.classList.add('hidden');
+            Elements.adminApprovals.classList.add('hidden');
+            Elements.adminReturnApprovals.classList.add('hidden');
+
+            if (btn.dataset.tab === 'dashboard') {
                 Elements.adminDashboard.classList.remove('hidden');
-                Elements.adminApprovals.classList.add('hidden');
-            } else {
-                Elements.adminDashboard.classList.add('hidden');
+            } else if (btn.dataset.tab === 'approvals') {
                 Elements.adminApprovals.classList.remove('hidden');
+                loadApprovals();
+            } else if (btn.dataset.tab === 'return-approvals') {
+                Elements.adminReturnApprovals.classList.remove('hidden');
                 loadApprovals();
             }
         });
@@ -750,7 +761,7 @@ function renderMyItems() {
     Elements.myItemsListActive.innerHTML = '';
     Elements.myItemsListHistory.innerHTML = '';
 
-    const activeItems = State.myItems.filter(t => t.Status === 'Pending' || t.Status === 'Approved');
+    const activeItems = State.myItems.filter(t => t.Status === 'Pending' || t.Status === 'Approved' || t.Status === 'Pending Return' || t.Status === 'Return Rejected');
     const historyItems = State.myItems.filter(t => t.Status === 'Returned' || t.Status === 'Rejected');
 
     // Render Active
@@ -785,7 +796,7 @@ function createMyItemCard(t) {
     let badgeClass = 'badge-pending';
     if (t.Status === 'Approved') badgeClass = 'badge-approved';
     if (t.Status === 'Returned') badgeClass = 'badge-returned';
-    if (t.Status === 'Rejected') badgeClass = 'badge-rejected';
+    if (t.Status === 'Rejected' || t.Status === 'Return Rejected') badgeClass = 'badge-rejected';
 
     // Check if overdue
     let overdueWarning = '';
@@ -839,7 +850,7 @@ function openTransModal(transId) {
         let badgeClass = 'badge-pending';
         if (t.Status === 'Approved') badgeClass = 'badge-approved';
         if (t.Status === 'Returned') badgeClass = 'badge-returned';
-        if (t.Status === 'Rejected') badgeClass = 'badge-rejected';
+        if (t.Status === 'Rejected' || t.Status === 'Return Rejected') badgeClass = 'badge-rejected';
 
         let borrowDateStr = formatDateStr(t.BorrowDate);
         let returnDateStr = formatDateStr(t.ExpectedReturn);
@@ -852,13 +863,20 @@ function openTransModal(transId) {
         Elements.modalTransItems.innerHTML = '';
         Elements.modalTransItems.style.cssText = "max-height: 250px; overflow-y: auto; padding-right: 0.5rem;";
 
-        t.Items.forEach(item => {
+        t.Items.forEach((item, index) => {
             const asset = State.assets.find(a => a.SKU === item.id);
             const img = asset ? asset.ImageURL : 'https://placehold.co/100';
 
             const div = document.createElement('div');
             div.style.cssText = "display:flex; align-items:center; gap:10px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #eee;";
+
+            let checkboxHTML = '';
+            if (State.user && State.user.role === 'Admin' && (t.Status === 'Pending' || t.Status === 'Pending Return')) {
+                checkboxHTML = `<input type="checkbox" class="admin-item-check" data-index="${index}" style="width:20px; height:20px; cursor:pointer;" title="Confirm this item">`;
+            }
+
             div.innerHTML = `
+            ${checkboxHTML}
             <img src="${img}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" onerror="this.src='https://placehold.co/100'">
             <div style="flex:1;">
                 <div style="font-weight:bold; font-size:0.9rem;">${item.name} <span class="text-secondary" style="font-size:0.8rem;">(${item.id})</span></div>
@@ -888,16 +906,51 @@ function openTransModal(transId) {
                 Elements.transModal.classList.add('hidden');
                 returnItem(t.TransID);
             };
-        } else if (t.Status === 'Pending' && State.user && State.user.role === 'Admin') {
+        } else if ((t.Status === 'Pending' || t.Status === 'Pending Return') && State.user && State.user.role === 'Admin') {
             Elements.modalAdminActionArea.classList.remove('hidden');
-            Elements.modalBtnApprove.onclick = () => {
-                Elements.transModal.classList.add('hidden');
-                adminApprove(t.TransID, 'Approved');
+
+            const validateChecklists = () => {
+                const checkboxes = document.querySelectorAll('.admin-item-check');
+                if (checkboxes.length === 0) return true;
+                let allChecked = true;
+                checkboxes.forEach(cb => {
+                    if (!cb.checked) allChecked = false;
+                });
+                if (!allChecked) {
+                    alert("Please check all items on the list before proceeding.");
+                    return false;
+                }
+                return true;
             };
-            Elements.modalBtnReject.onclick = () => {
-                Elements.transModal.classList.add('hidden');
-                adminApprove(t.TransID, 'Rejected');
-            };
+
+            const isReturn = t.Status === 'Pending Return';
+
+            // Customize buttons based on context (Borrow vs Return)
+            if (isReturn) {
+                Elements.modalBtnApprove.textContent = "Confirm Return";
+                Elements.modalBtnReject.textContent = "Reject Return";
+                Elements.modalBtnApprove.onclick = () => {
+                    if (!validateChecklists()) return;
+                    Elements.transModal.classList.add('hidden');
+                    adminApprove(t.TransID, 'Returned');
+                };
+                Elements.modalBtnReject.onclick = () => {
+                    Elements.transModal.classList.add('hidden');
+                    adminApprove(t.TransID, 'Return Rejected');
+                };
+            } else {
+                Elements.modalBtnApprove.textContent = "Approve Borrow";
+                Elements.modalBtnReject.textContent = "Reject Borrow";
+                Elements.modalBtnApprove.onclick = () => {
+                    if (!validateChecklists()) return;
+                    Elements.transModal.classList.add('hidden');
+                    adminApprove(t.TransID, 'Approved');
+                };
+                Elements.modalBtnReject.onclick = () => {
+                    Elements.transModal.classList.add('hidden');
+                    adminApprove(t.TransID, 'Rejected');
+                };
+            }
         }
 
         Elements.transModal.classList.remove('hidden');
@@ -1210,13 +1263,24 @@ function renderAdminDashList(type, filter) {
     }
 }
 
-function updateAdminBadges(count) {
-    if (count > 0) {
-        if (Elements.adminBadgeNav) { Elements.adminBadgeNav.textContent = count; Elements.adminBadgeNav.classList.remove('hidden'); }
-        if (Elements.adminBadgeTab) { Elements.adminBadgeTab.textContent = count; Elements.adminBadgeTab.classList.remove('hidden'); }
+function updateAdminBadges(borrowCount, returnCount) {
+    const total = borrowCount + returnCount;
+    if (total > 0) {
+        if (Elements.adminBadgeNav) { Elements.adminBadgeNav.textContent = total; Elements.adminBadgeNav.classList.remove('hidden'); }
     } else {
         if (Elements.adminBadgeNav) { Elements.adminBadgeNav.classList.add('hidden'); }
+    }
+
+    if (borrowCount > 0) {
+        if (Elements.adminBadgeTab) { Elements.adminBadgeTab.textContent = borrowCount; Elements.adminBadgeTab.classList.remove('hidden'); }
+    } else {
         if (Elements.adminBadgeTab) { Elements.adminBadgeTab.classList.add('hidden'); }
+    }
+
+    if (returnCount > 0) {
+        if (Elements.adminBadgeReturnTab) { Elements.adminBadgeReturnTab.textContent = returnCount; Elements.adminBadgeReturnTab.classList.remove('hidden'); }
+    } else {
+        if (Elements.adminBadgeReturnTab) { Elements.adminBadgeReturnTab.classList.add('hidden'); }
     }
 }
 
@@ -1225,61 +1289,65 @@ async function loadApprovals() {
         const data = await API.getApprovals(State.user.email);
         // Sort approvals oldest first (First In, First Out)
         State.pendingApprovals = (data.pending_list || []).sort((a, b) => new Date(a.BorrowDate) - new Date(b.BorrowDate));
-        const list = State.pendingApprovals;
+        State.returnApprovals = (data.return_list || []).sort((a, b) => new Date(a.BorrowDate) - new Date(b.BorrowDate));
 
-        updateAdminBadges(list.length);
+        updateAdminBadges(State.pendingApprovals.length, State.returnApprovals.length);
 
-        Elements.approvalList.innerHTML = '';
-        if (list.length === 0) {
-            Elements.approvalList.innerHTML = '<div class="text-center p-4">No pending approvals.</div>';
-            return;
-        }
-
-        list.forEach(t => {
-            let itemsListStr = t.Items.map(i => `${i.name} (x${i.qty})`).join(', ');
-            if (t.Items.length > 2) {
-                const firstTwo = t.Items.slice(0, 2).map(i => `${i.name} (x${i.qty})`).join(', ');
-                itemsListStr = `${firstTwo} และอื่นๆ อีก +${t.Items.length - 2} รายการ...`;
+        const renderList = (list, containerEl) => {
+            containerEl.innerHTML = '';
+            if (list.length === 0) {
+                containerEl.innerHTML = '<div class="text-center p-4">No pending requests.</div>';
+                return;
             }
 
-            const userName = t.Name || t.Email;
+            list.forEach(t => {
+                let itemsListStr = t.Items.map(i => `${i.name} (x${i.qty})`).join(', ');
+                if (t.Items.length > 2) {
+                    const firstTwo = t.Items.slice(0, 2).map(i => `${i.name} (x${i.qty})`).join(', ');
+                    itemsListStr = `${firstTwo} และอื่นๆ อีก +${t.Items.length - 2} รายการ...`;
+                }
 
-            const div = document.createElement('div');
-            div.className = 'card mt-4';
-            div.style.cursor = 'pointer';
-            // Click card body to view details
-            div.onclick = () => openTransModal(t.TransID);
+                const userName = t.Name || t.Email;
 
-            div.innerHTML = `
-                <div class="card-body">
-                    <div style="font-size:0.85rem; color:var(--text-secondary)">${t.TransID} | ${formatDateStr(t.BorrowDate)}</div>
-                    <div class="mt-2" style="font-weight:bold;">User: ${userName} <span style="font-size:0.8rem; font-weight:normal; color:#888;">(${t.Email})</span></div>
-                    
-                    <div class="mt-2" style="font-size: 0.95rem;">
-                        <strong>Items:</strong> ${itemsListStr}
-                        <div style="margin-top:0.25rem; font-size:0.85rem; color:var(--primary-color); font-weight:bold;">
-                            Total: ${t.Items.reduce((sum, i) => sum + i.qty, 0)} items
+                const div = document.createElement('div');
+                div.className = 'card mt-4';
+                div.style.cursor = 'pointer';
+                // Click card body to view details
+                div.onclick = () => openTransModal(t.TransID);
+
+                div.innerHTML = `
+                    <div class="card-body">
+                        <div style="font-size:0.85rem; color:var(--text-secondary)">${t.TransID} | ${formatDateStr(t.BorrowDate)}</div>
+                        <div class="mt-2" style="font-weight:bold;">User: ${userName} <span style="font-size:0.8rem; font-weight:normal; color:#888;">(${t.Email})</span></div>
+                        
+                        <div class="mt-2" style="font-size: 0.95rem;">
+                            <strong>Items:</strong> ${itemsListStr}
+                            <div style="margin-top:0.25rem; font-size:0.85rem; color:var(--primary-color); font-weight:bold;">
+                                Total: ${t.Items.reduce((sum, i) => sum + i.qty, 0)} items
+                            </div>
+                        </div>
+                        
+                        <div class="mt-2" style="font-size:0.85rem;">
+                            <span style="display:inline-block; padding:0.3rem 0.6rem; background-color:#f8f9fa; border:1px solid #e9ecef; border-radius:4px; font-weight:500; color:#495057;">
+                                Purpose: ${t.Purpose}
+                            </span>
+                        </div>
+                        
+                        <div class="mt-2" style="font-size:0.85rem; color:var(--text-secondary)">
+                            <div>Return By: ${formatDateStr(t.ExpectedReturn)}</div>
+                        </div>
+                        
+                        <div class="flex gap-4 mt-4 text-center">
+                            <button class="btn btn-primary" style="flex:1;" onclick="event.stopPropagation(); openTransModal('${t.TransID}')">Review Request</button>
                         </div>
                     </div>
-                    
-                    <div class="mt-2" style="font-size:0.85rem;">
-                        <span style="display:inline-block; padding:0.3rem 0.6rem; background-color:#f8f9fa; border:1px solid #e9ecef; border-radius:4px; font-weight:500; color:#495057;">
-                            Purpose: ${t.Purpose}
-                        </span>
-                    </div>
-                    
-                    <div class="mt-2" style="font-size:0.85rem; color:var(--text-secondary)">
-                        <div>Return By: ${formatDateStr(t.ExpectedReturn)}</div>
-                    </div>
-                    
-                    <div class="flex gap-4 mt-4 text-center">
-                        <button class="btn btn-outline" style="flex:1; border-color:var(--danger-color); color:var(--danger-color);" onclick="event.stopPropagation(); adminApprove('${t.TransID}', 'Rejected')">Reject</button>
-                        <button class="btn btn-primary" style="flex:1;" onclick="event.stopPropagation(); adminApprove('${t.TransID}', 'Approved')">Approve</button>
-                    </div>
-                </div>
-            `;
-            Elements.approvalList.appendChild(div);
-        });
+                `;
+                containerEl.appendChild(div);
+            });
+        };
+
+        renderList(State.pendingApprovals, Elements.approvalList);
+        renderList(State.returnApprovals, Elements.returnApprovalList);
 
     } catch (error) {
         console.error(error);
@@ -1297,8 +1365,14 @@ async function adminApprove(transId, status) {
         // Optimistically update badges
         if (State.pendingApprovals) {
             State.pendingApprovals = State.pendingApprovals.filter(t => t.TransID !== transId);
-            updateAdminBadges(State.pendingApprovals.length);
         }
+        if (State.returnApprovals) {
+            State.returnApprovals = State.returnApprovals.filter(t => t.TransID !== transId);
+        }
+        updateAdminBadges(
+            State.pendingApprovals ? State.pendingApprovals.length : 0,
+            State.returnApprovals ? State.returnApprovals.length : 0
+        );
 
         loadApprovals(); // Reload list
         loadAdminDash(); // Refresh numbers

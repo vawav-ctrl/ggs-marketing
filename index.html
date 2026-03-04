@@ -136,9 +136,14 @@
                 <button class="tab-btn" data-tab="dashboard"
                     style="flex:1; padding:1rem; border:none; background:none; border-bottom:2px solid var(--primary-color); font-weight:bold; cursor:pointer;">Dashboard</button>
                 <button class="tab-btn" data-tab="approvals"
-                    style="flex:1; padding:1rem; border:none; background:none; border-bottom:2px solid transparent; cursor:pointer; position:relative;">
-                    Approvals
-                    <span id="admin-badge-tab" class="cart-badge hidden" style="top:5px; right:20%;">0</span>
+                    style="flex:1; padding:1rem; border:none; background:none; border-bottom:2px solid transparent; cursor:pointer; position:relative; font-size:0.9rem;">
+                    Borrow<br>Requests
+                    <span id="admin-badge-tab" class="cart-badge hidden" style="top:5px; right:15%;">0</span>
+                </button>
+                <button class="tab-btn" data-tab="return-approvals"
+                    style="flex:1; padding:1rem; border:none; background:none; border-bottom:2px solid transparent; cursor:pointer; position:relative; font-size:0.9rem;">
+                    Return<br>Requests
+                    <span id="admin-badge-return-tab" class="cart-badge hidden" style="top:5px; right:15%;">0</span>
                 </button>
             </div>
 
@@ -192,11 +197,19 @@
 
             </div>
 
-            <!-- Tab: Approvals -->
+            <!-- Tab: Approvals (Borrow) -->
             <div id="admin-tab-approvals" class="hidden" style="padding:1rem;">
-                <h3>Pending Requests</h3>
+                <h3 class="mb-2">Pending Borrow Requests</h3>
                 <div id="approval-list">
-                    <!-- Admin approvals go here -->
+                    <!-- Borrow approvals go here -->
+                </div>
+            </div>
+
+            <!-- Tab: Return Approvals -->
+            <div id="admin-tab-return-approvals" class="hidden" style="padding:1rem;">
+                <h3 class="mb-2">Pending Return Requests</h3>
+                <div id="return-approval-list">
+                    <!-- Return approvals go here -->
                 </div>
             </div>
         </div> <!-- End Admin Screen -->
