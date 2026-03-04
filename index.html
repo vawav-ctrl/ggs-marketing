@@ -145,6 +145,10 @@
                     Return<br>Requests
                     <span id="admin-badge-return-tab" class="cart-badge hidden" style="top:5px; right:15%;">0</span>
                 </button>
+                <button class="tab-btn" data-tab="history"
+                    style="flex:1; padding:1rem; border:none; background:none; border-bottom:2px solid transparent; cursor:pointer; position:relative; font-size:0.9rem;">
+                    History
+                </button>
             </div>
 
             <!-- Tab: Dashboard -->
@@ -210,6 +214,15 @@
                 <h3 class="mb-2">Pending Return Requests</h3>
                 <div id="return-approval-list">
                     <!-- Return approvals go here -->
+                </div>
+            </div>
+
+            <!-- Tab: History -->
+            <div id="admin-tab-history" class="hidden" style="padding:1rem;">
+                <h3 class="mb-2">Transaction History</h3>
+                <div class="text-secondary text-sm mb-3">Showing all completed and rejected requests.</div>
+                <div id="history-approval-list">
+                    <!-- History approvals go here -->
                 </div>
             </div>
         </div> <!-- End Admin Screen -->

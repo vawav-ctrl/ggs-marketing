@@ -72,6 +72,7 @@ const Elements = {
     dashDormantContainer: document.getElementById('dash-dormant-container'),
     approvalList: document.getElementById('approval-list'),
     returnApprovalList: document.getElementById('return-approval-list'),
+    historyApprovalList: document.getElementById('history-approval-list'),
     adminBadgeNav: document.getElementById('admin-badge-nav'),
     adminBadgeTab: document.getElementById('admin-badge-tab'),
     adminBadgeReturnTab: document.getElementById('admin-badge-return-tab'),
@@ -221,6 +222,8 @@ function attachEvents() {
             Elements.adminDashboard.classList.add('hidden');
             Elements.adminApprovals.classList.add('hidden');
             Elements.adminReturnApprovals.classList.add('hidden');
+            const elHistoryTab = document.getElementById('admin-tab-history');
+            if (elHistoryTab) elHistoryTab.classList.add('hidden');
 
             if (btn.dataset.tab === 'dashboard') {
                 Elements.adminDashboard.classList.remove('hidden');
@@ -230,6 +233,15 @@ function attachEvents() {
             } else if (btn.dataset.tab === 'return-approvals') {
                 Elements.adminReturnApprovals.classList.remove('hidden');
                 loadApprovals();
+            } else if (btn.dataset.tab === 'history') {
+                if (elHistoryTab) elHistoryTab.classList.remove('hidden');
+                // History data comes from getDashboard payload (State.dashData)
+                // If it's not loaded yet, load it.
+                if (!State.dashData || !State.dashData.history_list) {
+                    loadAdminDash().then(() => renderAdminHistory());
+                } else {
+                    renderAdminHistory();
+                }
             }
         });
     });
@@ -836,9 +848,10 @@ function openTransModal(transId) {
         if (State.myItems) t = State.myItems.find(x => x.TransID === transId);
         if (!t && State.pendingApprovals) t = State.pendingApprovals.find(x => x.TransID === transId);
 
-        // Also check Admin Dashboard borrowed and overdue lists
+        // Also check Admin Dashboard borrowed, overdue, and history lists
         if (!t && State.dashData && State.dashData.borrowed_list) t = State.dashData.borrowed_list.find(x => x.TransID === transId);
         if (!t && State.dashData && State.dashData.overdue_list) t = State.dashData.overdue_list.find(x => x.TransID === transId);
+        if (!t && State.dashData && State.dashData.history_list) t = State.dashData.history_list.find(x => x.TransID === transId);
 
         if (!t) {
             alert("Error: Transaction data not found for ID: " + transId);
@@ -1352,6 +1365,71 @@ async function loadApprovals() {
     } catch (error) {
         console.error(error);
     }
+}
+
+function renderAdminHistory() {
+    const containerEl = Elements.historyApprovalList;
+    if (!containerEl) return;
+
+    containerEl.innerHTML = '';
+    const list = State.dashData?.history_list || [];
+
+    if (list.length === 0) {
+        containerEl.innerHTML = '<div class="text-center p-4">No completed transaction history found.</div>';
+        return;
+    }
+
+    list.forEach(t => {
+        let itemsListStr = t.Items.map(i => `${i.name} (x${i.qty})`).join(', ');
+        if (t.Items.length > 2) {
+            const firstTwo = t.Items.slice(0, 2).map(i => `${i.name} (x${i.qty})`).join(', ');
+            itemsListStr = `${firstTwo} และอื่นๆ อีก +${t.Items.length - 2} รายการ...`;
+        }
+
+        const userName = t.Name || t.Email;
+
+        let badgeClass = 'badge-pending';
+        if (t.Status === 'Approved') badgeClass = 'badge-approved';
+        if (t.Status === 'Returned') badgeClass = 'badge-returned';
+        if (t.Status === 'Rejected' || t.Status === 'Return Rejected') badgeClass = 'badge-rejected';
+
+        const div = document.createElement('div');
+        div.className = 'card mt-4';
+        div.style.cursor = 'pointer';
+        div.onclick = () => {
+            // we can re-use the open trans modal but we must inject the t into a state list it checks
+            // Or just make sure State.dashData.history_list is checked in openTransModal
+            openTransModal(t.TransID);
+        };
+
+        div.innerHTML = `
+            <div class="card-body">
+                <div class="flex justify-between">
+                    <strong style="font-size:0.85rem; color:var(--text-secondary)">${t.TransID} | ${formatDateStr(t.BorrowDate)}</strong>
+                    <span class="badge ${badgeClass}">${t.Status}</span>
+                </div>
+                <div class="mt-2" style="font-weight:bold;">User: ${userName} <span style="font-size:0.8rem; font-weight:normal; color:#888;">(${t.Email})</span></div>
+                
+                <div class="mt-2" style="font-size: 0.95rem;">
+                    <strong>Items:</strong> ${itemsListStr}
+                    <div style="margin-top:0.25rem; font-size:0.85rem; color:var(--primary-color); font-weight:bold;">
+                        Total: ${t.Items.reduce((sum, i) => sum + i.qty, 0)} items
+                    </div>
+                </div>
+                
+                <div class="mt-2" style="font-size:0.85rem;">
+                    <span style="display:inline-block; padding:0.3rem 0.6rem; background-color:#f8f9fa; border:1px solid #e9ecef; border-radius:4px; font-weight:500; color:#495057;">
+                        Purpose: ${t.Purpose}
+                    </span>
+                </div>
+                
+                <div class="mt-2" style="font-size:0.85rem; color:var(--text-secondary)">
+                    <div>Return By: ${formatDateStr(t.ExpectedReturn)}</div>
+                </div>
+            </div>
+        `;
+        containerEl.appendChild(div);
+    });
 }
 
 async function adminApprove(transId, status) {
