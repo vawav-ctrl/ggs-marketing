@@ -947,9 +947,20 @@ function openTransModal(transId) {
                 Elements.transModal.classList.add('hidden');
                 cancelRequest(t.TransID);
             };
-            Elements.modalBtnReborrow.onclick = () => {
-                // Re-add items to cart
+            Elements.modalBtnReborrow.onclick = async () => {
                 Elements.transModal.classList.add('hidden');
+
+                // 1. Silent cancel of the old request
+                try {
+                    showLoading();
+                    await API.cancelRequest(t.TransID);
+                } catch (e) {
+                    console.error("Failed to cancel old request", e);
+                } finally {
+                    hideLoading();
+                }
+
+                // 2. Re-add items to cart
                 State.cart = [];
                 t.Items.forEach(item => {
                     const asset = State.assets.find(a => a.SKU === item.id);
