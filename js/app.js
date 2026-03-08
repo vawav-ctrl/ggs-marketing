@@ -272,20 +272,30 @@ function attachEvents() {
 
     // Asset Carousel Events
     let touchStartX = 0;
+    let touchStartY = 0;
     Elements.modalAssetBorrowers.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    });
+        touchStartX = e.changedTouches[0].clientX;
+        touchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+
     Elements.modalAssetBorrowers.addEventListener('touchend', e => {
-        let touchEndX = e.changedTouches[0].screenX;
+        let touchEndX = e.changedTouches[0].clientX;
+        let touchEndY = e.changedTouches[0].clientY;
+
+        let diffX = touchStartX - touchEndX;
+        let diffY = Math.abs(touchStartY - touchEndY);
+
+        // If vertical movement is greater than horizontal, ignore (it's a scroll)
+        if (diffY > Math.abs(diffX)) return;
 
         // Swipe left (Next item)
-        if (touchStartX - touchEndX > 50) {
+        if (diffX > 30) {
             if (Carousel.currentIndex < Carousel.totalItems - 1) Carousel.currentIndex++;
             else Carousel.currentIndex = 0;
             updateCarouselUI();
         }
         // Swipe right (Prev item)
-        else if (touchEndX - touchStartX > 50) {
+        else if (diffX < -30) {
             if (Carousel.currentIndex > 0) Carousel.currentIndex--;
             else Carousel.currentIndex = Carousel.totalItems - 1;
             updateCarouselUI();
@@ -529,7 +539,7 @@ function openAssetModal(sku) {
     // Setup Borrowers List (Carousel)
     Elements.modalAssetBorrowers.innerHTML = '';
     Elements.modalAssetDots.innerHTML = '';
-    Elements.modalAssetBorrowers.style.touchAction = 'pan-y pinch-zoom'; // Critical for horizontal swipe
+    Elements.modalAssetBorrowers.style.touchAction = 'pan-y'; // Use pan-y for maximum Safari compatibility
     Carousel.currentIndex = 0;
     Carousel.totalItems = asset.borrowers ? asset.borrowers.length : 0;
 
