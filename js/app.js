@@ -914,7 +914,7 @@ function openTransModal(transId) {
         Elements.modalTransReturnArea.classList.add('hidden');
         Elements.modalAdminActionArea.classList.add('hidden');
 
-        if (t.Status === 'Approved') {
+        if (t.Status === 'Approved' || t.Status === 'Return Rejected') {
             Elements.modalTransReturnArea.classList.remove('hidden');
             Elements.modalBtnReturn.onclick = () => {
                 Elements.transModal.classList.add('hidden');

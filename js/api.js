@@ -278,7 +278,7 @@ const API = {
     // 8. Dashboard (Admin)
     async supabase_getDashboard(payload) {
         // Fetch all base data
-        const resCat = await supabaseClient.from('categories').select('Name');
+        const resCat = await supabaseClient.from('categories').select('*');
         const resAss = await supabaseClient.from('assets').select('*');
         const resTrans = await supabaseClient.from('transactions').select(`*, users!transactions_Email_fkey(Name)`);
 
@@ -298,7 +298,7 @@ const API = {
 
         // Group categories
         const categoryBreakdown = {};
-        resCat.data.forEach(c => categoryBreakdown[c.Name] = { name: c.Name, count: 0 });
+        resCat.data.forEach(c => categoryBreakdown[c.CategoryID] = { name: c.Name, count: 0 });
         activeAssets.forEach(a => {
             if (categoryBreakdown[a.CategoryID]) {
                 categoryBreakdown[a.CategoryID].count += (a.TotalQty || 0);
@@ -328,8 +328,8 @@ const API = {
             return new Date(a.LastActive) < ninetyDaysAgo;
         });
 
-        // History
-        const historyList = transactions.filter(t => t.Status === 'Returned' || t.Status === 'Rejected' || t.Status === 'Return Rejected');
+        // History (Include all actionable status, i.e. not Pending)
+        const historyList = transactions.filter(t => t.Status !== 'Pending');
         historyList.sort((a, b) => new Date(b.BorrowDate) - new Date(a.BorrowDate));
 
         return {
