@@ -125,6 +125,13 @@ function initApp() {
     const savedUser = localStorage.getItem('ggs_user');
     if (savedUser) {
         State.user = JSON.parse(savedUser);
+
+        // Restore Admin UI
+        const adminNav = document.querySelector('.nav-item[data-target="admin"]');
+        if (State.user && State.user.role === 'Admin' && adminNav) {
+            adminNav.classList.remove('hidden');
+        }
+
         loadHomeData();
     } else {
         showScreen('login');
