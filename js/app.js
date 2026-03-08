@@ -522,6 +522,7 @@ function openAssetModal(sku) {
     // Setup Borrowers List (Carousel)
     Elements.modalAssetBorrowers.innerHTML = '';
     Elements.modalAssetDots.innerHTML = '';
+    Elements.modalAssetBorrowers.style.touchAction = 'pan-y pinch-zoom'; // Critical for horizontal swipe
     Carousel.currentIndex = 0;
     Carousel.totalItems = asset.borrowers ? asset.borrowers.length : 0;
 
