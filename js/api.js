@@ -40,6 +40,7 @@ const API = {
         return await this.route('approveItem', { email, transaction_id: transactionId, status });
     },
     async getDashboard(email) { return await this.route('getDashboard', { email }); },
+    async cancelRequest(transactionId) { return await this.route('cancelRequest', { transaction_id: transactionId }); },
 
     // ==========================================
     // Google Apps Script (Legacy Backend)
@@ -343,5 +344,15 @@ const API = {
             inactive_list: dormantAssets,
             history_list: historyList
         };
+    },
+
+    // 9. Cancel Request (User side)
+    async supabase_cancelRequest(payload) {
+        const { error } = await supabaseClient.from('transactions')
+            .update({ Status: 'Cancelled' })
+            .eq('TransID', payload.transaction_id);
+
+        if (error) throw new Error(error.message);
+        return { message: "Cancelled successfully!" };
     }
 };

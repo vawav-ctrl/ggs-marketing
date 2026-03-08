@@ -108,6 +108,9 @@ const Elements = {
     modalAdminActionArea: document.getElementById('modal-admin-action-area'),
     modalBtnApprove: document.getElementById('modal-btn-approve'),
     modalBtnReject: document.getElementById('modal-btn-reject'),
+    modalUserActionArea: document.getElementById('modal-user-action-area'),
+    modalBtnCancelReq: document.getElementById('modal-btn-cancel-req'),
+    modalBtnReborrow: document.getElementById('modal-btn-reborrow'),
 
     // Admin Dashboard Modal
     adminDashModal: document.getElementById('admin-dash-modal'),
@@ -791,8 +794,8 @@ function renderMyItems() {
     Elements.myItemsListActive.innerHTML = '';
     Elements.myItemsListHistory.innerHTML = '';
 
-    const activeItems = State.myItems.filter(t => t.Status === 'Pending' || t.Status === 'Approved' || t.Status === 'Pending Return' || t.Status === 'Return Rejected');
-    const historyItems = State.myItems.filter(t => t.Status === 'Returned' || t.Status === 'Rejected');
+    const activeItems = State.myItems.filter(t => t.Status === 'Pending' || t.Status === 'Approved' || t.Status === 'Pending Return' || t.Status === 'Return Rejected' || t.Status === 'Rejected');
+    const historyItems = State.myItems.filter(t => t.Status === 'Returned' || t.Status === 'Cancelled');
 
     // Render Active
     if (activeItems.length === 0) {
@@ -826,7 +829,7 @@ function createMyItemCard(t) {
     let badgeClass = 'badge-pending';
     if (t.Status === 'Approved') badgeClass = 'badge-approved';
     if (t.Status === 'Returned') badgeClass = 'badge-returned';
-    if (t.Status === 'Rejected' || t.Status === 'Return Rejected') badgeClass = 'badge-rejected';
+    if (t.Status === 'Rejected' || t.Status === 'Return Rejected' || t.Status === 'Cancelled') badgeClass = 'badge-rejected';
 
     // Check if overdue
     let overdueWarning = '';
@@ -930,12 +933,32 @@ function openTransModal(transId) {
         // Button container logic
         Elements.modalTransReturnArea.classList.add('hidden');
         Elements.modalAdminActionArea.classList.add('hidden');
+        Elements.modalUserActionArea.classList.add('hidden');
 
         if (t.Status === 'Approved' || t.Status === 'Return Rejected') {
             Elements.modalTransReturnArea.classList.remove('hidden');
             Elements.modalBtnReturn.onclick = () => {
                 Elements.transModal.classList.add('hidden');
                 returnItem(t.TransID);
+            };
+        } else if (t.Status === 'Rejected') {
+            Elements.modalUserActionArea.classList.remove('hidden');
+            Elements.modalBtnCancelReq.onclick = () => {
+                Elements.transModal.classList.add('hidden');
+                cancelRequest(t.TransID);
+            };
+            Elements.modalBtnReborrow.onclick = () => {
+                // Re-add items to cart
+                Elements.transModal.classList.add('hidden');
+                State.cart = [];
+                t.Items.forEach(item => {
+                    const asset = State.assets.find(a => a.SKU === item.id);
+                    if (asset) {
+                        State.cart.push({ asset: asset, qty: parseInt(item.qty, 10) });
+                    }
+                });
+                updateCartBadge();
+                openCart();
             };
         } else if ((t.Status === 'Pending' || t.Status === 'Pending Return') && State.user && State.user.role === 'Admin') {
             Elements.modalAdminActionArea.classList.remove('hidden');
@@ -1000,6 +1023,19 @@ async function returnItem(transId) {
         loadMyItems(); // Reload
     } catch (error) {
         alert("Error returning items: " + error.message);
+        hideLoading();
+    }
+}
+
+async function cancelRequest(transId) {
+    if (!confirm("Are you sure you want to cancel and clear this rejected request?")) return;
+    try {
+        showLoading();
+        await API.cancelRequest(transId);
+        alert("Request cancelled successfully!");
+        loadMyItems(); // Reload
+    } catch (error) {
+        alert("Error cancelling request: " + error.message);
         hideLoading();
     }
 }
