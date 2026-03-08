@@ -178,12 +178,14 @@ const API = {
         if (error) throw new Error(error.message);
 
         // Normalize JSON payload
-        return data.map(t => {
+        const mappedData = data.map(t => {
             if (typeof t.Items === 'string') {
                 try { t.Items = JSON.parse(t.Items); } catch (e) { }
             }
             return t;
         });
+
+        return { transactions: mappedData };
     },
 
     // 5. Return Item Request
