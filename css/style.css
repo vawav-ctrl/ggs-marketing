@@ -455,6 +455,26 @@ body {
   box-sizing: border-box;
 }
 
+.swipe-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+
+.swipe-track::-webkit-scrollbar {
+  display: none;
+}
+
+.swipe-track .carousel-item {
+  scroll-snap-align: center;
+  flex: 0 0 90%;
+  min-width: 90%;
+}
+
 .carousel-dot {
   width: 8px;
   height: 8px;

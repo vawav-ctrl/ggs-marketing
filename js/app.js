@@ -273,37 +273,21 @@ function attachEvents() {
         renderAdminDashList(State.currentDashType, val);
     });
 
-    // Asset Carousel Events
-    let touchStartX = 0;
-    let touchStartY = 0;
-    Elements.modalAssetBorrowers.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].clientX;
-        touchStartY = e.changedTouches[0].clientY;
+    // Native CSS Scroll updates for Carousel Dots
+    Elements.modalAssetBorrowers.addEventListener('scroll', (e) => {
+        const scrollLeft = e.target.scrollLeft;
+        const width = e.target.clientWidth;
+        // Use clientWidth config or default
+        const index = Math.round(scrollLeft / width);
+        if (Carousel.currentIndex !== index) {
+            Carousel.currentIndex = index;
+            const dots = Elements.modalAssetDots.querySelectorAll('.carousel-dot');
+            dots.forEach((dot, idx) => {
+                if (idx === index) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
+        }
     }, { passive: true });
-
-    Elements.modalAssetBorrowers.addEventListener('touchend', e => {
-        let touchEndX = e.changedTouches[0].clientX;
-        let touchEndY = e.changedTouches[0].clientY;
-
-        let diffX = touchStartX - touchEndX;
-        let diffY = Math.abs(touchStartY - touchEndY);
-
-        // If vertical movement is greater than horizontal, ignore (it's a scroll)
-        if (diffY > Math.abs(diffX)) return;
-
-        // Swipe left (Next item)
-        if (diffX > 30) {
-            if (Carousel.currentIndex < Carousel.totalItems - 1) Carousel.currentIndex++;
-            else Carousel.currentIndex = 0;
-            updateCarouselUI();
-        }
-        // Swipe right (Prev item)
-        else if (diffX < -30) {
-            if (Carousel.currentIndex > 0) Carousel.currentIndex--;
-            else Carousel.currentIndex = Carousel.totalItems - 1;
-            updateCarouselUI();
-        }
-    });
 
     // Search Assets Event Trigger
     Elements.inputSearchAssets.addEventListener('input', (e) => {
@@ -353,7 +337,8 @@ function attachEvents() {
 
 // ============== UTILS ==============
 function updateCarouselUI() {
-    Elements.modalAssetBorrowers.style.transform = `translateX(-${Carousel.currentIndex * 100}%)`;
+    // With native CSS swipe, we no longer need transform translateX.
+    // Elements.modalAssetBorrowers.scrollLeft = Carousel.currentIndex * Elements.modalAssetBorrowers.clientWidth;
 
     const dots = Elements.modalAssetDots.querySelectorAll('.carousel-dot');
     dots.forEach((dot, idx) => {
@@ -542,7 +527,8 @@ function openAssetModal(sku) {
     // Setup Borrowers List (Carousel)
     Elements.modalAssetBorrowers.innerHTML = '';
     Elements.modalAssetDots.innerHTML = '';
-    Elements.modalAssetBorrowers.style.touchAction = 'pan-y'; // Use pan-y for maximum Safari compatibility
+    // scroll back to start
+    Elements.modalAssetBorrowers.scrollLeft = 0;
     Carousel.currentIndex = 0;
     Carousel.totalItems = asset.borrowers ? asset.borrowers.length : 0;
 
@@ -578,6 +564,10 @@ function openAssetModal(sku) {
             if (idx === 0) dot.classList.add('active');
             dot.onclick = () => {
                 Carousel.currentIndex = idx;
+                Elements.modalAssetBorrowers.scrollTo({
+                    left: idx * Elements.modalAssetBorrowers.clientWidth,
+                    behavior: 'smooth'
+                });
                 updateCarouselUI();
             };
             Elements.modalAssetDots.appendChild(dot);
