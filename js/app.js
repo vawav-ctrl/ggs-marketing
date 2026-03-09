@@ -840,7 +840,7 @@ function createMyItemCard(t) {
     const div = document.createElement('div');
     div.className = 'card mt-4';
     div.style.cursor = "pointer";
-    div.onclick = () => openTransModal(t.TransID);
+    div.onclick = () => openTransModal(t.TransID, 'user');
     div.innerHTML = `
         <div class="card-body">
             <div class="flex justify-between">
@@ -863,7 +863,7 @@ function createMyItemCard(t) {
     return div;
 }
 
-function openTransModal(transId) {
+function openTransModal(transId, source = 'admin') {
     try {
         let t = null;
         if (State.myItems) t = State.myItems.find(x => x.TransID === transId);
@@ -971,7 +971,7 @@ function openTransModal(transId) {
                 updateCartBadge();
                 openCart();
             };
-        } else if ((t.Status === 'Pending' || t.Status === 'Pending Return') && State.user && State.user.role === 'Admin') {
+        } else if ((t.Status === 'Pending' || t.Status === 'Pending Return') && State.user && State.user.role === 'Admin' && source !== 'user') {
             Elements.modalAdminActionArea.classList.remove('hidden');
 
             const validateChecklists = () => {
@@ -1391,7 +1391,7 @@ async function loadApprovals() {
                 div.className = 'card mt-4';
                 div.style.cursor = 'pointer';
                 // Click card body to view details
-                div.onclick = () => openTransModal(t.TransID);
+                div.onclick = () => openTransModal(t.TransID, 'admin');
 
                 div.innerHTML = `
                     <div class="card-body">
@@ -1416,7 +1416,7 @@ async function loadApprovals() {
                         </div>
                         
                         <div class="flex gap-4 mt-4 text-center">
-                            <button class="btn btn-primary" style="flex:1;" onclick="event.stopPropagation(); openTransModal('${t.TransID}')">Review Request</button>
+                            <button class="btn btn-primary" style="flex:1;" onclick="event.stopPropagation(); openTransModal('${t.TransID}', 'admin')">Review Request</button>
                         </div>
                     </div>
                 `;
@@ -1464,7 +1464,7 @@ function renderAdminHistory() {
         div.onclick = () => {
             // we can re-use the open trans modal but we must inject the t into a state list it checks
             // Or just make sure State.dashData.history_list is checked in openTransModal
-            openTransModal(t.TransID);
+            openTransModal(t.TransID, 'admin');
         };
 
         div.innerHTML = `
