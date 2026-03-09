@@ -905,7 +905,7 @@ function openTransModal(transId, source = 'admin') {
             div.style.cssText = "display:flex; align-items:center; gap:10px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #eee;";
 
             let checkboxHTML = '';
-            if (State.user && State.user.role === 'Admin' && (t.Status === 'Pending' || t.Status === 'Pending Return')) {
+            if (State.user && State.user.role === 'Admin' && (t.Status === 'Pending' || t.Status === 'Pending Return') && source !== 'user') {
                 checkboxHTML = `<input type="checkbox" class="admin-item-check" data-index="${index}" style="width:20px; height:20px; cursor:pointer;" title="Confirm this item">`;
             }
 
